@@ -31,6 +31,9 @@ Papiro needs these binaries:
 # Encode a file to qrcodes in single pdf
 ./papiro.sh -c memo.txt
 
+# Interactively create a new vim encrypted file and then process it
+./papiro.sh -x
+
 # Encode a file to qrcodes keeping the filename secret
 ./papiro.sh -c thisphoto.jpg -a
 
@@ -40,4 +43,8 @@ Papiro needs these binaries:
 
 ## Security
 
-Remember that a qrcode slightly obfuscates your data but it does not protect them in any way; you may need to encrypt them before using Papiro, also to avoid the printer's attack surface.
+Remember that a qrcode slightly obfuscates your data but it does not protect them in any way; you may need to encrypt them before using Papiro, also to avoid the printer's attack surface. For that you can use gpg, a password protected zip or the built-in "new vim encrypted file":
+
+```
+./papiro.sh -x
+```

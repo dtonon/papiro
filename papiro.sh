@@ -10,6 +10,7 @@ function show_help {
     echo -e "\033[1mRebuild file\033[0m:\tpapiro.sh [-r] source_directory [-o rebuild_file]"
     echo -e "\nOptions:"
     echo -e "\033[1m-a\033[0m\tAnonymous mode, don't annotate the original filename to increase the privacy"
+    echo -e "\033[1m-x\033[0m\tInteractively create a new vim encrypted file and then process it"
     echo -e "\033[1m-o\033[0m\tSpecify the output filename"
     echo -e "\033[1m-z\033[0m\tDebug mode, create a debug/ dir with the temp images"
     echo -e "\nExamples:"
@@ -21,11 +22,12 @@ function show_help {
 WORK_DIR=`mktemp -d`
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then echo "Could not create the temp dir"; exit 1; fi
 
-while getopts "c:ar:o:dh" flag
+while getopts "c:axr:o:dh" flag
 do
     case "${flag}" in
         c) encode_file=${OPTARG};;
         a) anonymous="ON";;
+        x) new_secret="ON";;
         r) decode_dir=${OPTARG};;
         o) decode_output=${OPTARG};;
         d) debug="ON";;
@@ -36,10 +38,15 @@ done
 # Create the debug directory or empty if it alredy exists
 if [ -n "$debug" ]; then echo "DEBUG active"; mkdir $PWD/debug; rm $PWD/debug/*; fi
 
+date_file=$(date "+%Y%m%d-%H%M%S")
+if [ -n "$new_secret" ]; then
+    encode_file="secret-$date_file"
+    vim -xn $encode_file
+fi
+
 if [ -n "$encode_file" ]; then
     if ! [[ -f "$encode_file" ]]; then echo -e "\nError: file not found"; show_help; exit 2; fi
     date=$(date "+%Y-%m-%d %H:%M")
-    date_file=$(date "+%Y%m%d-%H%M%S")
     if [ -n "$anonymous" ]; then label_file="***************"; echo "Anonymous mode ON";  else label_file=$encode_file; fi
     if [ -n "$decode_output" ]; then
         pdf_file=$decode_output
