@@ -39,9 +39,15 @@ if [ -n "$debug" ]; then echo "DEBUG active"; mkdir $PWD/debug; rm $PWD/debug/*;
 if [ -n "$encode_file" ]; then
     if ! [[ -f "$encode_file" ]]; then echo -e "\nError: file not found"; show_help; exit 2; fi
     date=$(date "+%Y-%m-%d %H:%M")
-    date_file=$(date "+%Y%m%d-%H%M")
-    if [ -n "$anonymous" ]; then label_file="xxxxxxx-$date_file"; echo "Anonymous mode ON";  else label_file=$encode_file; fi
-    if [ -n "$decode_output" ]; then pdf_file=$decode_output; else pdf_file=$PWD/print-$label_file.pdf; fi
+    date_file=$(date "+%Y%m%d-%H%M%S")
+    if [ -n "$anonymous" ]; then label_file="***************"; echo "Anonymous mode ON";  else label_file=$encode_file; fi
+    if [ -n "$decode_output" ]; then
+        pdf_file=$decode_output
+    elif [ -n "$anonymous" ]; then
+        pdf_file="qrcodes-$date_file.pdf"
+    else
+        pdf_file=$PWD/qrcodes-$label_file.pdf
+    fi
     echo "Encoding $encode_file..."
     checksum=$(shasum $encode_file | cut -f 1 -d ' ')
     echo "SHA1 signature: $checksum"
