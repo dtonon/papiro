@@ -56,8 +56,8 @@ if [ -n "$encode_file" ]; then
         pdf_file=$PWD/qrcodes-$label_file.pdf
     fi
     echo "Encoding $encode_file..."
-    checksum=$(shasum $encode_file | cut -f 1 -d ' ')
-    echo "SHA1 signature: $checksum"
+    checksum=$(shasum -a 256 $encode_file | cut -f 1 -d ' ')
+    echo "SHA256 signature: $checksum"
 
     WORK_FILE="$WORK_DIR/$label_file"
     base64 $encode_file > $WORK_FILE.base64
@@ -66,9 +66,9 @@ if [ -n "$encode_file" ]; then
     total_files=`ls $WORK_FILE.split*.png | wc -l`
     total_files=`echo $total_files | sed 's/ *$//g'`
     counter=1
-    for file in $WORK_FILE.split*.png; do convert -comment "$label_file    |    $date    |    $counter of $total_files parts\nsha1: $checksum\n" $file $file; counter=$((counter+1)); done
+    for file in $WORK_FILE.split*.png; do convert -comment "$label_file    |    $date    |    $counter of $total_files parts\nsha256: $checksum\n" $file $file; counter=$((counter+1)); done
     if [ -n "$debug" ]; then cp $WORK_DIR/*.png $PWD/debug/; fi
-    montage -label '%c' $WORK_DIR/*.png -geometry "1x1<" -tile 3x4 $pdf_file
+    montage -label '%c' $WORK_DIR/*.png -title "sha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
     convert $pdf_file -type bilevel -compress fax $pdf_file
     echo "File ready to print: $pdf_file"
 
@@ -91,7 +91,7 @@ elif [ -n "$decode_dir" ]; then
 
     base64 -d $WORK_DIR/restore.base64 > $OUTPUT
     echo "File rebuild from paper: $OUTPUT"
-    echo "SHA1 signature: $(shasum $OUTPUT | cut -f 1 -d ' ')"
+    echo "SHA256 signature: $(shasum -a 256 $OUTPUT | cut -f 1 -d ' ')"
 
 else
     show_help
