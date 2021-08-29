@@ -1,6 +1,6 @@
 # Papiro
 
-**Papiro it is a simple script that encodes and decodes a file to/from qrcode(s).**
+**Papiro is a simple script that encodes and decodes a file to/from qrcode(s).**
 The qrcodes are saved in a single pdf, ready to print; the rebuild process is done on a group of qrcodes' photos.
 
 Papiro is useful to save files in a non digital fashion for backup and portability pourposes using a printer.
@@ -35,11 +35,15 @@ Papiro needs these binaries:
 ./papiro.sh -x
 
 # Encode a file to qrcodes keeping the filename secret
-./papiro.sh -c thisphoto.jpg -a
+./papiro.sh -c cat.jpg -a
 
 # Decode a group of images to rebuild a file
 ./papiro.sh -r photos/ -o data.json
 ```
+
+Example of a generated pdf (top cropped ~A4 page):
+
+![Output pdf example](docs/output-example.png)
 
 ## Security
 
