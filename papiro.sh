@@ -66,10 +66,10 @@ if [ -n "$encode_file" ]; then
     total_files=`ls $WORK_FILE.split*.png | wc -l`
     total_files=`echo $total_files | sed 's/ *$//g'`
     counter=1
-    for file in $WORK_FILE.split*.png; do convert -comment "$label_file    |    $date    |    $counter of $total_files parts\nsha256: $checksum\n" $file $file; counter=$((counter+1)); done
+    for file in $WORK_FILE.split*.png; do convert -comment "$label_file\n$date    |    $counter of $total_files parts" $file $file; counter=$((counter+1)); done
     if [ -n "$debug" ]; then cp $WORK_DIR/*.png $PWD/debug/; fi
-    montage -label '%c' $WORK_DIR/*.png -title "sha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
-    convert $pdf_file -type bilevel -compress fax $pdf_file
+    montage -font Arial -pointsize 22 -label '%c' $WORK_DIR/*.png -title "sha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
+    convert $pdf_file -page A4 -border 40 -type bilevel -compress fax $pdf_file
     echo "File ready to print: $pdf_file"
 
 elif [ -n "$decode_dir" ]; then
