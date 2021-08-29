@@ -69,6 +69,7 @@ if [ -n "$encode_file" ]; then
     for file in $WORK_FILE.split*.png; do convert -comment "$label_file    |    $date    |    $counter of $total_files parts\nsha1: $checksum\n" $file $file; counter=$((counter+1)); done
     if [ -n "$debug" ]; then cp $WORK_DIR/*.png $PWD/debug/; fi
     montage -label '%c' $WORK_DIR/*.png -geometry "1x1<" -tile 3x4 $pdf_file
+    convert $pdf_file -type bilevel -compress fax $pdf_file
     echo "File ready to print: $pdf_file"
 
 elif [ -n "$decode_dir" ]; then
