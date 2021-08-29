@@ -23,7 +23,7 @@ Papiro needs these binaries:
  git clone https://github.com/dtonon/papiro.git
  cd papiro
  chmod +x papiro.sh
- papiro.sh -h
+ ./papiro.sh -h
  ```
 
  ## Usage
@@ -41,7 +41,14 @@ Papiro needs these binaries:
 ./papiro.sh -r photos/ -o data.json
 ```
 
-Example of a generated pdf (top cropped ~A4 page):
+## Example
+
+In the examples/ dir you can find a [nice cat's photo source](examples/cat.jpg) and the [6 pages qrcodes-pdf-papiro](examples/qrcodes-cat.jpg.pdf) generated with the following command:
+
+```
+./papiro.sh -c cat.jpg
+```
+This is a preview of the generated pdf (top cropped A4 page):
 
 ![Output pdf example](docs/output-example.png)
 
