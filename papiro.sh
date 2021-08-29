@@ -6,10 +6,11 @@
 WORK_DIR=`mktemp -d`
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then echo "Could not create the temp dir"; exit 1; fi
 
-while getopts "e:d:o:z" flag
+while getopts "e:ad:o:z" flag
 do
     case "${flag}" in
         e) encode_file=${OPTARG};;
+        a) anonymous="ON";;
         d) decode_dir=${OPTARG};;
         o) decode_output=${OPTARG};;
         z) debug="ON";;
@@ -21,11 +22,12 @@ if [ -n "$debug" ]; then echo "DEBUG active"; mkdir $PWD/debug; rm $PWD/debug/*;
 
 if [ -n "$encode_file" ]; then
     if ! [[ -f "$encode_file" ]]; then echo "Error: file not found"; exit 2; fi
+    if [ -n "$anonymous" ]; then label_file="xxxxxxxxxxxx"; echo "Anonymous mode ON";  else label_file=$encode_file; fi
     echo "Encoding $encode_file..."
     checksum=$(shasum $encode_file | cut -f 1 -d ' ')
     echo "SHA1 signature: $checksum"
 
-    WORK_FILE="$WORK_DIR/$encode_file"
+    WORK_FILE="$WORK_DIR/$label_file"
     base64 $encode_file > $WORK_FILE.base64
     split -b 1273 $WORK_FILE.base64 $WORK_FILE.split
     for file in $WORK_FILE.split*; do qrencode --8bit -v 40 --margin=10 -l H -o $file.png < $file; done
@@ -33,10 +35,12 @@ if [ -n "$encode_file" ]; then
     total_files=`echo $total_files | sed 's/ *$//g'`
     counter=1
     date=$(date "+%Y-%m-%d %H:%M")
-    for file in $WORK_FILE.split*.png; do convert -comment "$encode_file    |    $date    |    $counter of $total_files parts\nsha1: $checksum\n" $file $file; counter=$((counter+1)); done
+    date_file=$(date "+%Y%m%d-%H%M")
+    for file in $WORK_FILE.split*.png; do convert -comment "$label_file    |    $date    |    $counter of $total_files parts\nsha1: $checksum\n" $file $file; counter=$((counter+1)); done
     if [ -n "$debug" ]; then cp $WORK_DIR/*.png $PWD/debug/; fi
-    montage -label '%c' $WORK_DIR/*.png -geometry "1x1<" -tile 3x4 $PWD/print-$encode_file.pdf
-    echo "File ready to print: $PWD/print-$encode_file.pdf"
+    pdf_file=$PWD/print-$label_file-$date_file.pdf
+    montage -label '%c' $WORK_DIR/*.png -geometry "1x1<" -tile 3x4 $pdf_file
+    echo "File ready to print: $pdf_file"
 
 elif [ -n "$decode_dir" ]; then
     if ! [[ -d "$decode_dir" ]]; then echo "Error: directory not found"; exit 2; fi
@@ -65,6 +69,7 @@ else
     echo "Encode a file: papiro -e myfile.pdf"
     echo "Decode a group of images: papiro -d photos/ -o myfile.pdf"
     echo "Options:"
+    echo "-a Anonymous: don't annotate the original file name to increase the privacy"
     echo "-z Debug: create a debug/ dir with the intermediate images"
 
 fi
