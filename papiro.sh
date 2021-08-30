@@ -60,9 +60,9 @@ if [ -n "$encode_file" ]; then
     echo "SHA256 signature: $checksum"
 
     WORK_FILE="$WORK_DIR/$label_file"
-    base64 $encode_file > $WORK_FILE.base64
-    split -b 1273 $WORK_FILE.base64 $WORK_FILE.split
-    for file in $WORK_FILE.split*; do qrencode --8bit -v 40 --margin=10 -l H -o $file.png < $file; done
+    cp $encode_file $WORK_FILE
+    split -b 1273 $WORK_FILE $WORK_FILE.split
+    for file in $WORK_FILE.split*; do qrencode --8bit -v 40 --margin=10 -l H -o $file.png -r $file; done
     total_files=`ls $WORK_FILE.split*.png | wc -l`
     total_files=`echo $total_files | sed 's/ *$//g'`
     counter=1
@@ -83,13 +83,12 @@ elif [ -n "$decode_dir" ]; then
 
     counter=1; for file in $WORK_DIR/pics/*
     do
-        STRING=`zbarimg --raw -q $file`
-        if ! [ -n "$STRING" ]; then echo "Error: no content found in the qrcode #$counter, check the image quality"; exit 1; fi
-        echo $STRING >> $WORK_DIR/restore.base64
+        zbar_output=$( (zbarimg --raw --oneshot -Sbinary -Sdisable -Sqr.enable $file >> $WORK_DIR/restore) 2>&1 > /dev/null)
+        if [[ $zbar_output == *"not detected"* ]]; then echo "Error: no content found in the qrcode #$counter, check the image quality"; exit 1; fi
         counter=$((counter+1))
     done
 
-    base64 -d $WORK_DIR/restore.base64 > $OUTPUT
+    cp $WORK_DIR/restore $OUTPUT
     echo "File rebuild from paper: $OUTPUT"
     echo "SHA256 signature: $(shasum -a 256 $OUTPUT | cut -f 1 -d ' ')"
 

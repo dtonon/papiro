@@ -43,7 +43,7 @@ Papiro needs these binaries:
 
 ## Example
 
-In the examples/ dir you can find a [nice cat's photo source](examples/cat.jpg) and the [6 pages qrcodes-pdf-papiro](examples/qrcodes-cat.jpg.pdf) generated with the following command:
+In the examples/ dir you can find a [nice 60KB cat's photo](examples/cat.jpg) and the [4 pages qrcodes-pdf-papiro](examples/qrcodes-cat.jpg.pdf) generated with the following command:
 
 ```
 ./papiro.sh -c cat.jpg
