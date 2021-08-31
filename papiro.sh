@@ -94,7 +94,7 @@ if [ -n "$encode_file" ]; then
     if [ -n "$debug" ]; then cp $work_dir/*.png $PWD/debug/; fi
 
     # Create a multipage pdf and optimize its size
-    montage -font Arial -pointsize 22 -label '%c' $work_dir/*.png -title "\n$label_file | $date_human\nsha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
+    montage -pointsize 20 -label '%c' $work_dir/*.png -title "\n$label_file | $date_human\nsha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
     convert $pdf_file -border 40 -type bilevel -compress fax $pdf_file
 
     echo "Your Papiro is ready to print: $pdf_file"
