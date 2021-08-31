@@ -4,7 +4,7 @@
 The qrcodes are saved in a single pdf, ready to print; the rebuild process is done on a group of qrcodes' photos.
 
 Papiro is useful to save files in a non digital fashion for backup and portability pourposes using a printer.
-You can export secrets, cretentials, 2FA backup codes, crypto seeds and more (binary files are supported too).
+You can export secrets, credentials, 2FA backup codes, crypto seeds and more (binary files are supported too).
 
 _Papiro_ is the italian word for "papyrus" :page_with_curl:
 
