@@ -64,7 +64,16 @@ if [ -n "$encode_file" ]; then
     echo "Encoding $encode_file..."
 
     # If invoked with the anonymous flag (-a) set the label_file and pdf_file accor accordingly to avoid to store the filename
-    if [ -n "$anonymous" ]; then label_file="***************"; echo "Anonymous mode ON";  else label_file=$(basename -- $encode_file); fi
+    if [ -n "$anonymous" ]; then
+        echo "Anonymous mode"
+        output_file="xxxxxxxxxxxxxxxx"
+        label_file="***************"
+    else
+        output_file=$(basename -- $encode_file)
+        label_file=$output_file
+        
+    fi
+
     if [ -n "$decode_output" ]; then
         pdf_file=$decode_output
     elif [ -n "$anonymous" ]; then
@@ -77,7 +86,7 @@ if [ -n "$encode_file" ]; then
     checksum=$(shasum -a 256 $encode_file | cut -f 1 -d ' ')
     echo "SHA256 signature: $checksum"
 
-    work_file="$work_dir/$(basename -- $label_file)"
+    work_file="$work_dir/$output_file"
     cp $encode_file $work_file
 
     # Split the file in chunks of 1273 bytes. This is the max size for a qrcode v40 (177x177) with hight (H) error correction code level (ECC)
