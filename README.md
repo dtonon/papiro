@@ -15,7 +15,8 @@ Because paper seems the [most resilient storage medium on earth](https://superus
 
 ## Specs & Performances
 
-Papiro uses the QR Code v40 (177x177 matrix) with an hight (H) error correction level; [according to the specs](https://www.qrcode.com/en/about/version.html) with this config we can save 1273 bytes in binary mode on a single QR Code. An A4 sheet can accomodate 12 QR Codes for *an unbelievable total of ~14.91KB!* So a standard 500 sheets pack easily stores ~7.28MB, or ~14.56MB with an double side print.
+Papiro uses the QR Code v40 (177x177 matrix) with low (default, you can change it with the -l option) error correction level; [according to the specs](https://www.qrcode.com/en/about/version.html) with this config we can save 2953 bytes in binary mode on a single QR Code. An A4 sheet can accomodate 12 QR Codes for *an unbelievable total of ~34.60KB!* So a standard 500 sheets pack easily stores ~16.89MB, or ~33.79MB with an double side print.
+With the best (high) error correction level you can print ~14.91KB/sheet.
 
 ## Requirements
 
@@ -70,7 +71,10 @@ Clone the repo and make the script executable:
 ./papiro.sh -c memo.txt
 
 # Zip and encode a file
-./papiro.sh -z -c divina-commedia.txt
+./papiro.sh -c divina-commedia.txt -z
+
+# Encode a file with the best error correction
+./papiro.sh -c important-data.xml -lH
 
 # Encode a directory to qrcodes (using a zip file)
 ./papiro.sh -c mydata/
@@ -90,7 +94,8 @@ Papiro options:
 
 ```
 -z	Zip the file(s)
--o	Specify the output filename
+-l	Set the QR Code error correction level (L|M|Q|H); default is L(ow)
+-o	Set the output filename
 -a	Anonymous mode, don't annotate the original filename
 -h	Show the help
 -d	Debug mode, create a debug/ dir with the temp images
@@ -98,7 +103,7 @@ Papiro options:
 
 ## Example
 
-In the examples/ dir you can find a [nice 60KB cat's photo](examples/cat.jpg) and the [4 pages QR Codes-pdf-papiro](examples/qrcodes-cat.jpg.pdf) generated with the following command:
+In the examples/ dir you can find a [nice 60KB cat's photo](examples/cat/cat.jpg) and the [2 pages QR Codes-pdf-papiro](examples/cat/qrcodes-cat.jpg.pdf) generated with the following command:
 
 ```
 ./papiro.sh -c cat.jpg
@@ -106,6 +111,8 @@ In the examples/ dir you can find a [nice 60KB cat's photo](examples/cat.jpg) an
 This is a preview of the generated pdf (top cropped A4 page):
 
 [![Output pdf example](docs/output-example.png)](examples/qrcodes-cat.jpg.pdf)
+
+Or you can enjoy the full [Dante Alighieri's Divina Commedia in 7 pages](examples/divina-commedia/README.md), too!
 
 ## Privacy & Encryption
 

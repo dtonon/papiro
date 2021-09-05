@@ -8,20 +8,22 @@ function show_help {
     echo -e "The qrcodes are saved in a single pdf, ready to print; the rebuild process is done on a group of acquired photos."
     echo -e "\nUsage"
     echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
-    echo -e "\033[1mEncode a file in qrcodes\033[0m\n./papiro.sh -c file|directory [-az] [-o file.pdf]\n"
+    echo -e "\033[1mEncode a file in qrcodes\033[0m\n./papiro.sh -c file|directory [-za] [-l L|M|Q|H] [-o file.pdf]\n"
     echo -e "\033[1mRebuild file from photos\033[0m\n./papiro.sh -r source_directory [-o rebuild_file]\n"
     echo -e "\033[1mCreate an encrypted txt\033[0m\n./papiro.sh -x [-o rebuild_file]\n"
     echo -e "Options"
     echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
     echo -e "\033[1m-z\033[0m\tZip the file(s) to reduce the number of QR Codes"
-    echo -e "\033[1m-o\033[0m\tSpecify the output filename"
+    echo -e "\033[1m-l\033[0m\tSet the QR Codes error correction level (L|M|Q|H); default is L(ow)"
+    echo -e "\033[1m-o\033[0m\tSet the output filename"
     echo -e "\033[1m-a\033[0m\tAnonymous mode, don't annotate the original filename"
     echo -e "\033[1m-h\033[0m\tShow this help"
     echo -e "\033[1m-d\033[0m\tDebug mode"
     echo -e "\nExamples"
     echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
     echo "Encode a file to qrcodes: ./papiro.sh -c myfile.jpg"
-    echo "Zip and encode a file to qrcodes: ./papiro.sh -z -c divina-commedia.txt"
+    echo "Zip and encode a file to qrcodes: ./papiro.sh -c divina-commedia.txt -z"
+    echo "Encode a file with the best error correction: ./papiro.sh -c important-data.xml -lH "
     echo "Encode a directory to qrcodes (using a zip file): ./papiro.sh -c mydata/"
     echo "Decode a group of images to rebuild a file: ./papiro.sh -r photos/ -o myfile.jpg"
 }
@@ -37,12 +39,13 @@ if [[ ! "$work_dir" || ! -d "$work_dir" ]]; then echo "Could not create the temp
 echo "" # Blank line for readibility
 
 # Parse the flags
-while getopts "c:azxr:o:dh" flag
+while getopts "c:azl:xr:o:dh" flag
 do
     case "${flag}" in
         c) encode_source=${OPTARG};;
         a) anonymous="ON";;
         z) zip="ON";;
+        l) error_correction_level=${OPTARG};;
         x) new_secret="ON";;
         r) decode_dir=${OPTARG};;
         o) decode_output=${OPTARG};;
@@ -98,6 +101,25 @@ if [ -n "$encode_source" ]; then
         
     fi
 
+    # Set the split chunk size according to the error correction, default is L(ow)
+    case $error_correction_level in
+    "L" | "")
+        error_correction_level="L"
+        split_chunk=2953;;
+    "M")
+        split_chunk=2331;;
+    "Q")
+        split_chunk=1663;;
+    "H")
+        split_chunk=1273;;
+    *)
+        echo "Error: bad correction level code, valid values are L, M, Q, and H"; show_help_hint;
+        exit 2
+        ;;
+    esac
+
+    echo "=> Error correction level: $error_correction_level"
+
     if [ -n "$decode_output" ]; then
         pdf_file=$decode_output
     elif [ -n "$anonymous" ]; then
@@ -129,10 +151,10 @@ if [ -n "$encode_source" ]; then
 
     # Split the file in chunks of 1273 bytes. This is the max size for a qrcode v40 (177x177) with hight (H) error correction code level (ECC)
     # Check https://www.qrcode.com/en/about/version.html for more details
-    split -b 1273 $work_file $work_file.split
+    split -b $split_chunk $work_file $work_file.split
 
     # Encode the files in a qrcode 177x177, hight correction mode
-    for file in $work_file.split*; do qrencode --8bit -v 40 -l H -o $file.png -r $file; done
+    for file in $work_file.split*; do qrencode --8bit -v 40 -l $error_correction_level -o $file.png -r $file; done
 
     # Get the qrcodes count
     total_files=`ls $work_file.split*.png | wc -l | sed "s/ *//g"`
@@ -156,8 +178,8 @@ if [ -n "$encode_source" ]; then
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 
 elif [ -n "$decode_dir" ]; then
-    if ! [[ -d "$decode_dir" ]]; then echo -e "\nError: directory not found"; show_help_hint; exit 2; fi
-    echo "Decoding $decode_dir"
+    if ! [[ -d "$decode_dir" ]]; then echo -e "Error: directory not found"; show_help_hint; exit 2; fi
+    echo "Decoding $decode_dir/*"
     if [ -n "$decode_output" ]; then decode_output=$decode_output; else decode_output="decoded_file"; fi
 
     # Optimize the scanned images
