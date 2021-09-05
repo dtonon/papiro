@@ -1,6 +1,8 @@
 # Papiro
 
-**Papiro is a simple script that encodes and decodes a file to/from QR Code(s).**
+**Papiro is a script that encodes and decodes files to/from QR Code(s).**
+
+You can encode a single file or a full directory, in the latter case the data are zipped before the encoding.
 
 The QR Codes are saved in a single pdf, ready to print; the rebuild process is done on a group of QR Codes' photos. Papiro is useful to save files in a non digital fashion for backup and portability pourposes using a printer.
 You can encode passwords, secrets, credentials, 2FA backup codes, crypto seeds ([mind the privacy](#security--encryption)!) and any text/binary file.
@@ -67,6 +69,12 @@ Clone the repo and make the script executable:
 # Encode a file to QR Codes in single pdf
 ./papiro.sh -c memo.txt
 
+# Zip and encode a file
+./papiro.sh -z -c divina-commedia.txt
+
+# Encode a directory to qrcodes (using a zip file)
+./papiro.sh -c mydata/
+
 # Interactively create a new vim encrypted file and then process it
 ./papiro.sh -x
 
@@ -74,14 +82,18 @@ Clone the repo and make the script executable:
 ./papiro.sh -c cat.jpg -a
 
 # Decode a group of images to rebuild a file
+# Note: files have to be correctly ordered by name,
+# cameras create sequential pics with a correct filename
 ./papiro.sh -r photos/ -o data.json
 ```
-These are all the options:
+Papiro options:
 
 ```
--a	Anonymous mode, don't annotate the original filename for increased privacy
+-z	Zip the file(s)
 -o	Specify the output filename
--z	Debug mode, create a debug/ dir with the temp images
+-a	Anonymous mode, don't annotate the original filename
+-h	Show the help
+-d	Debug mode, create a debug/ dir with the temp images
 ```
 
 ## Example
@@ -95,10 +107,12 @@ This is a preview of the generated pdf (top cropped A4 page):
 
 [![Output pdf example](docs/output-example.png)](examples/qrcodes-cat.jpg.pdf)
 
-## Security & Encryption
+## Privacy & Encryption
 
 Remember that a QR Code slightly obfuscates your data but it does not protect them in any way; if your data need privacy you *have* to encrypt them before using Papiro. This is also useful to avoid the [printer's attack surface](https://krebsonsecurity.com/2021/07/microsoft-issues-emergency-patch-for-windows-flaw/). To apply a good privacy layer you can use [GPG](https://gnupg.org/), a password protected zip (also useful to reduce the file size and so the number of QR Codes) or the built-in "new vim encrypted file":
 
 ```
 ./papiro.sh -x
 ```
+
+You can also use the `-a` option to don't annotate the filename on the created pdf.

@@ -3,35 +3,46 @@
 # Idea from https://www.grant-trebbin.com/2015/05/encode-and-decode-file-backed-up-as.html
 
 function show_help {      
-    echo -e "\nPapiro encodes and decodes a file to/from qrcodes, to store it phisically."
+    echo -e "Papiro encodes and decodes file(s) to/from QR Codes, to print and store them phisically."
+    echo -e "You can encode a single file or a full directory, in this latter case the data are zipped before the encoding."
     echo -e "The qrcodes are saved in a single pdf, ready to print; the rebuild process is done on a group of acquired photos."
-    echo -e "\nUsage:\n"
-    echo -e "\033[1mEncode a file in qrcodes\033[0m:\n./papiro.sh -c source_file [-a] [-o file.pdf]\n"
-    echo -e "\033[1mRebuild file from photos\033[0m:\n./papiro.sh -r source_directory [-o rebuild_file]\n"
-    echo -e "\033[1mCreate an encrypted txt\033[0m:\n./papiro.sh -x [-o rebuild_file]\n"
-    echo -e "\nOptions:"
-    echo -e "\033[1m-a\033[0m\tAnonymous mode, don't annotate the original filename for increased privacy"
+    echo -e "\nUsage"
+    echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+    echo -e "\033[1mEncode a file in qrcodes\033[0m\n./papiro.sh -c file|directory [-az] [-o file.pdf]\n"
+    echo -e "\033[1mRebuild file from photos\033[0m\n./papiro.sh -r source_directory [-o rebuild_file]\n"
+    echo -e "\033[1mCreate an encrypted txt\033[0m\n./papiro.sh -x [-o rebuild_file]\n"
+    echo -e "Options"
+    echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+    echo -e "\033[1m-z\033[0m\tZip the file(s) to reduce the number of QR Codes"
     echo -e "\033[1m-o\033[0m\tSpecify the output filename"
-    echo -e "\033[1m-d\033[0m\tDebug mode, create a debug/ dir with the temp images"
-    echo -e "\033[1m-h\033[0m\tGet this help"
-    echo -e "\nExamples:"
+    echo -e "\033[1m-a\033[0m\tAnonymous mode, don't annotate the original filename"
+    echo -e "\033[1m-h\033[0m\tShow this help"
+    echo -e "\033[1m-d\033[0m\tDebug mode"
+    echo -e "\nExamples"
+    echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
     echo "Encode a file to qrcodes: ./papiro.sh -c myfile.jpg"
+    echo "Zip and encode a file to qrcodes: ./papiro.sh -z -c divina-commedia.txt"
+    echo "Encode a directory to qrcodes (using a zip file): ./papiro.sh -c mydata/"
     echo "Decode a group of images to rebuild a file: ./papiro.sh -r photos/ -o myfile.jpg"
+}
+
+function show_help_hint {      
+    echo -e "Try ./papiro -h to see the help and some examples"
 }
 
 # Create a tmp dir
 work_dir=`mktemp -d`
 if [[ ! "$work_dir" || ! -d "$work_dir" ]]; then echo "Could not create the temp dir"; exit 1; fi
 
-# The temp dir will be cleared automatically on the exit
-trap "rm -rf "$work_dir"" EXIT
+echo "" # Blank line for readibility
 
 # Parse the flags
-while getopts "c:axr:o:dh" flag
+while getopts "c:azxr:o:dh" flag
 do
     case "${flag}" in
-        c) encode_file=${OPTARG};;
+        c) encode_source=${OPTARG};;
         a) anonymous="ON";;
+        z) zip="ON";;
         x) new_secret="ON";;
         r) decode_dir=${OPTARG};;
         o) decode_output=${OPTARG};;
@@ -41,15 +52,26 @@ do
 done
 
 # If invoked with the debug (-d) flag create a temp directory or empty if it alredy exists
-if [ -n "$debug" ]; then echo "DEBUG active"; mkdir $PWD/debug; rm $PWD/debug/*; fi
+if [ -n "$debug" ]; then
+    debug_dir="papiro-debug"
+    echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
+    echo "=> Debug mode is active";
+    mkdir -p $PWD/$debug_dir;
+    rm -rf $PWD/$debug_dir/*;
+    echo -e "  Work_dir: $work_dir\n  \033[1mRemember to clear it manually\033[0m"
+    echo -e "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+else
+    # The work temp dir will be cleared automatically on the exit
+    trap "rm -rf "$work_dir"" EXIT
+fi
 
 date_human=$(date "+%Y-%m-%d %H:%M")
 date_file=$(date "+%Y%m%d-%H%M%S")
 
 # If invoked with the -x flag, create a new encrypted vim file, then use it for the encoding
 if [ -n "$new_secret" ]; then
-    encode_file="secret-$date_file"
-    vim -xn $encode_file
+    encode_source="secret-$date_file"
+    vim -xn $encode_source
 fi
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
@@ -59,17 +81,19 @@ fi
 #
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 
-if [ -n "$encode_file" ]; then
-    if ! [[ -f "$encode_file" ]]; then echo -e "\nError: file not found"; show_help; exit 2; fi
-    echo "Encoding $encode_file..."
+if [ -n "$encode_source" ]; then
+    if ! [[ -f "$encode_source" || -d "$encode_source" ]]; then echo -e "Error: file not found"; show_help_hint; exit 2; fi
+
+    # If the source is a directory automatically activate the zip mode
+    if [ -d "$encode_source" ]; then echo "=> Directory detected: automatically activate the Zip mode"; zip="ON"; fi
 
     # If invoked with the anonymous flag (-a) set the label_file and pdf_file accor accordingly to avoid to store the filename
     if [ -n "$anonymous" ]; then
-        echo "Anonymous mode"
+        echo "=> Anonymous mode"
         output_file="xxxxxxxxxxxxxxxx"
         label_file="***************"
     else
-        output_file=$(basename -- $encode_file)
+        output_file=$(basename -- $encode_source)
         label_file=$output_file
         
     fi
@@ -82,12 +106,26 @@ if [ -n "$encode_file" ]; then
         pdf_file=$PWD/qrcodes-$label_file.pdf
     fi
 
-    # Calculate the checksum, it is included in the pdf for a future integrity check
-    checksum=$(shasum -a 256 $encode_file | cut -f 1 -d ' ')
-    echo "SHA256 signature: $checksum"
-
     work_file="$work_dir/$output_file"
-    cp $encode_file $work_file
+    cp -R $encode_source $work_file
+
+    if [ -n "$zip" ]; then
+        echo "=> Zip mode"
+        # Cannot use the split (-s -sp) option because 64k is the minimum split size
+        # TODO add -q optin for suppress output
+        current_position=$PWD
+        cd $work_dir
+        zip -r -9 "$(basename -- $work_file.zip)" "$(basename -- $work_file)"
+        work_file=$work_file.zip
+        encode_source=$work_file
+        cd "$current_position"
+    fi
+
+    # Calculate the checksum, it is included in the pdf for a future integrity check
+    checksum=$(shasum -a 256 $encode_source | cut -f 1 -d ' ')
+    echo "=> SHA256 signature: $checksum"
+
+    echo "=> Encoding $encode_source to qrcodes"
 
     # Split the file in chunks of 1273 bytes. This is the max size for a qrcode v40 (177x177) with hight (H) error correction code level (ECC)
     # Check https://www.qrcode.com/en/about/version.html for more details
@@ -101,13 +139,13 @@ if [ -n "$encode_file" ]; then
 
     # Add a label to every qrcode
     counter=1; for file in $work_file.split*.png; do convert -comment "$label_file\n$date_human    |    $counter of $total_files parts" $file $file; counter=$((counter+1)); done
-    if [ -n "$debug" ]; then cp $work_dir/*.png $PWD/debug/; fi
+    if [ -n "$debug" ]; then cp $work_dir/*.png $PWD/$debug_dir/; fi
 
     # Create a multipage pdf and optimize its size
     montage -pointsize 20 -label '%c' $work_dir/*.png -title "\n$label_file | $date_human\nsha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
     convert $pdf_file -border 40 -type bilevel -compress fax $pdf_file
 
-    echo "Your Papiro is ready to print: $pdf_file"
+    echo -e "\nYour Papiro is ready to print: $pdf_file"
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
@@ -118,14 +156,14 @@ if [ -n "$encode_file" ]; then
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 
 elif [ -n "$decode_dir" ]; then
-    if ! [[ -d "$decode_dir" ]]; then echo -e "\nError: directory not found"; show_help; exit 2; fi
-    echo "Decoding $decode_dir..."
-    if [ -n "$decode_output" ]; then OUTPUT=$decode_output; else OUTPUT="decoded_file"; fi
+    if ! [[ -d "$decode_dir" ]]; then echo -e "\nError: directory not found"; show_help_hint; exit 2; fi
+    echo "Decoding $decode_dir"
+    if [ -n "$decode_output" ]; then decode_output=$decode_output; else decode_output="decoded_file"; fi
 
     # Optimize the scanned images
     mkdir $work_dir/pics
     for file in $decode_dir/*; do convert $file -quiet -morphology open square:1 -threshold 50% $work_dir/pics/$(basename -- $file).png; done
-    if [ -n "$debug" ]; then cp $work_dir/pics/* $PWD/debug/; fi
+    if [ -n "$debug" ]; then cp $work_dir/pics/* $PWD/$debug_dir/; fi
 
     # Scan optimized qrcodes and concatenate data to a unique file
     counter=1; for file in $work_dir/pics/*
@@ -134,10 +172,18 @@ elif [ -n "$decode_dir" ]; then
         if [[ $zbar_output == *"not detected"* ]]; then echo "Error: no content found in the qrcode #$counter, check the image quality"; exit 1; fi
         counter=$((counter+1))
     done
-    cp $work_dir/restore $OUTPUT
+    cp "$work_dir/restore" "$decode_output"
 
-    echo "File rebuild from papiro: $OUTPUT"
-    echo "SHA256 signature: $(shasum -a 256 $OUTPUT | cut -f 1 -d ' ')"
+    # Add zip extension automatically
+    file_type=`file -b $decode_output`
+    if [[ $file_type == *"Zip"* ]] && [[ ! $decode_output == *"zip" ]]; then
+        echo "=> Detected a Zip file: add the extension"
+        mv "$decode_output" "$decode_output.zip"
+        decode_output="$decode_output.zip"
+    fi
+
+    echo -e "\n=> File rebuild from papiro: $decode_output"
+    echo -e "=> SHA256 signature: $(shasum -a 256 $decode_output | cut -f 1 -d ' ')"
 
 else
 
