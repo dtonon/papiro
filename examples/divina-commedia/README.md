@@ -1,6 +1,6 @@
 # Print the Divina Commedia in just 7 pages
 
-With [Papiro](https://github.com/dtonon/papiro) you can print the full Dante Alighieri's [Divina Commedia book](divina-commedia.txt) (19.567 lines for 557KB of plain text) in [just 7 pages](qrcodes-divina-commedia.txt.pdf). It is easy:
+With [Papiro](https://github.com/dtonon/papiro) you can print the full [Divina Commedia](divina-commedia.txt) by Dante Alighieri (19.567 lines for 557KB of plain text) in [just 7 pages](qrcodes-divina-commedia.txt.pdf). It is easy:
 
 ```
 ./papiro.sh -z -c divina-commedia.txt
