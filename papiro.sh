@@ -184,13 +184,13 @@ elif [ -n "$decode_dir" ]; then
 
     # Optimize the scanned images
     mkdir $work_dir/pics
-    for file in $decode_dir/*; do convert $file -quiet -morphology open square:1 -threshold 50% $work_dir/pics/$(basename -- $file).png; done
+    for file in $decode_dir/*; do convert "$file" -quiet -morphology open square:1 -threshold 50% "$work_dir/pics/$(basename -- $file).png"; done
     if [ -n "$debug" ]; then cp $work_dir/pics/* $PWD/$debug_dir/; fi
 
     # Scan optimized qrcodes and concatenate data to a unique file
     counter=1; for file in $work_dir/pics/*
     do
-        zbar_output=$( (zbarimg --raw --oneshot -Sbinary -Sdisable -Sqr.enable $file >> $work_dir/restore) 2>&1 > /dev/null)
+        zbar_output=$( (zbarimg --raw --oneshot -Sbinary -Sdisable -Sqr.enable "$file" >> $work_dir/restore) 2>&1 > /dev/null)
         if [[ $zbar_output == *"not detected"* ]]; then echo "Error: no content found in the qrcode #$counter, check the image quality"; exit 1; fi
         counter=$((counter+1))
     done
