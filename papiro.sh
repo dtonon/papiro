@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Project: https://github.com/dtonon/papiro
+
 # Idea from https://www.grant-trebbin.com/2015/05/encode-and-decode-file-backed-up-as.html
 
 function show_help {      
@@ -17,6 +19,7 @@ function show_help {
     echo -e "\033[1m-l\033[0m\tSet the QR Codes error correction level (L|M|Q|H); default is L(ow)"
     echo -e "\033[1m-o\033[0m\tSet the output filename"
     echo -e "\033[1m-a\033[0m\tAnonymous mode, don't annotate the original filename"
+    echo -e "\033[1m-s\033[0m\tCreate a papiro of the script itself, useful for archiving with the encoded data"
     echo -e "\033[1m-h\033[0m\tShow this help"
     echo -e "\033[1m-d\033[0m\tDebug mode"
     echo -e "\nExamples"
@@ -39,7 +42,7 @@ if [[ ! "$work_dir" || ! -d "$work_dir" ]]; then echo "Could not create the temp
 echo "" # Blank line for readibility
 
 # Parse the flags
-while getopts "c:azl:xr:o:dh" flag
+while getopts "c:azl:xr:o:sdh" flag
 do
     case "${flag}" in
         c) encode_source=${OPTARG};;
@@ -49,6 +52,7 @@ do
         x) new_secret="ON";;
         r) decode_dir=${OPTARG};;
         o) decode_output=${OPTARG};;
+        s) encode_myself="ON";;
         d) debug="ON";;
         h) help="ON";;
     esac
@@ -70,6 +74,19 @@ fi
 
 date_human=$(date "+%Y-%m-%d %H:%M")
 date_file=$(date "+%Y%m%d-%H%M%S")
+
+# If invoked with the -x flag, create a new encrypted vim file, then use it for the encoding
+if [ -n "$encode_myself" ]; then
+    echo -e "=> Papiro self mode: I'm going to generate a papiro of myself!"
+    encode_source=`basename $0`
+
+    # Disable the zip in self mode
+    if [ -n "$zip" ]; then
+        echo -e "=> \033[1mWarning\033[0m: using the self mode with Zip is technically possibile but not very useful, because it is hard to rebuild a binary file. Let's go on with a plain txt :)"
+        unset zip
+    fi
+
+fi
 
 # If invoked with the -x flag, create a new encrypted vim file, then use it for the encoding
 if [ -n "$new_secret" ]; then
@@ -164,7 +181,9 @@ if [ -n "$encode_source" ]; then
     if [ -n "$debug" ]; then cp $work_dir/*.png $PWD/$debug_dir/; fi
 
     # Create a multipage pdf and optimize its size
-    montage -pointsize 20 -label '%c' $work_dir/*.png -title "\n$label_file | $date_human\nsha256: $checksum" -geometry "1x1<" -tile 3x4 $pdf_file
+    title="\n\n$label_file | $date_human\nsha256: $checksum"
+    if [ -n "$encode_myself" ]; then title="$title\nScan the qrcodes and merge the content in a unique text file, rename it to papiro.sh, run it"; fi
+    montage -pointsize 20 -label '%c' $work_dir/*.png -title "$title" -geometry "1x1<" -tile 3x4 $pdf_file
     convert $pdf_file -border 40 -type bilevel -compress fax $pdf_file
 
     echo -e "\nYour Papiro is ready to print: $pdf_file"

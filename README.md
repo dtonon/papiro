@@ -97,9 +97,18 @@ Papiro options:
 -l	Set the QR Code error correction level (L|M|Q|H); default is L(ow)
 -o	Set the output filename
 -a	Anonymous mode, don't annotate the original filename
+-s  Create a papiro of the script itself, useful for archiving along with the encoded data
 -h	Show the help
 -d	Debug mode, create a debug/ dir with the temp images
 ```
+
+## Self mode
+You can create a papiro of papiro.sh itself using the -s flag:
+
+```
+./papiro -s
+```
+This command encode the script in QR codes with a brief description about how to decode and use it; it is useful to include with the encoded data, to ensure a easy way to decode it even if your don't have the original Papiro script and are using an air gapped system.
 
 ## Example
 
