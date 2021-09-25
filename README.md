@@ -1,17 +1,17 @@
 # Papiro
 
-**Papiro is a script that encodes and decodes files to/from QR Code(s).**
+**Papiro encodes and decodes files to/from QR Code(s).**
 
 You can encode a single file or a full directory, in the latter case the data are zipped before the encoding.
 
-The QR Codes are saved in a single pdf, ready to print; the rebuild process is done on a group of QR Codes' photos. Papiro is useful to save files in a non digital fashion for backup and portability pourposes using a printer.
-You can encode passwords, secrets, credentials, 2FA backup codes, crypto seeds ([mind the privacy](#security--encryption)!) and any text/binary file.
+The QR Codes are saved in a single (eventually multi page) pdf, ready to print; the rebuild process is done on a group of QR Codes' photos. Papiro is useful to save files in a non digital fashion for backup and portability pourposes using a printer.
+You can encode passwords, secrets, credentials, 2FA backup codes, crypto seeds ([mind the privacy](#privacy--encryption)!) and any text/binary file.
 
 _Papiro_ is the italian word for "papyrus" :page_with_curl:
 
 ## Why QR Codes on paper?
 
-Because paper seems the [most resilient storage medium on earth](https://superuser.com/questions/374609/what-medium-should-be-used-for-long-term-high-volume-data-storage-archival), at least for low volume data, and QR Codes have an interesting error-checking system. So it is a nice backup solution to pair with digital ones.
+Because paper seems the [most resilient and cost-effective storage medium on earth](https://superuser.com/questions/374609/what-medium-should-be-used-for-long-term-high-volume-data-storage-archival), at least for low volume data, and QR Codes have an interesting error-checking system. So it is a nice backup solution to pair with digital ones.
 
 ## Specs & Performances
 
@@ -20,12 +20,28 @@ With the best (high) error correction level you can print ~14.91KB/sheet.
 
 ## Requirements
 
-Papiro needs these binaries:
+Papiro is a simple shell script and needs these binaries:
 
 - `convert`
 - `qrencode`
 - `zbarimg`
 - `montage`
+
+### Linux
+
+Install the required binaries using your favorite package manager, e.g.:
+
+```
+apt-get install imagemagick
+apt-get install qrencode
+apt-get install zbar-tools # Can have a different name, eg. "zbar"
+```
+If you get an error on Linux about the *"convert: attempt to perform an operation not allowed by the security policy <gs|pdf>"* add the following to */etc/ImageMagick-7/policy.xml*:
+
+```
+<policy domain="coder" rights="read | write" pattern="PDF" />
+<policy domain="coder" rights="read | write" pattern="gs" />
+```
 
 ### Mac
 
@@ -36,21 +52,10 @@ brew install imagemagick
 brew install qrencode
 brew install zbar
 ```
-### Linux
 
-Install the required binaries using your favorite package manager, e.g.:
+### Windows
 
-```
-pacman -S imagemagick
-pacman -S qrencode
-pacman -S zbar
-```
-If you get an error on Linux about the *"convert: attempt to perform an operation not allowed by the security policy <gs|pdf>"* add the following to */etc/ImageMagick-7/policy.xml*:
-
-```
-<policy domain="coder" rights="read | write" pattern="PDF" />
-<policy domain="coder" rights="read | write" pattern="gs" />
-```
+I don't own a Windows PC, sorry; so any contributions are welcome to test Papiro and write a brief startup guide. Fork the project and create a pull request, thank you!
 
 ## Installation
 
@@ -97,18 +102,10 @@ Papiro options:
 -l	Set the QR Code error correction level (L|M|Q|H); default is L(ow)
 -o	Set the output filename
 -a	Anonymous mode, don't annotate the original filename
--s  Create a papiro of the script itself, useful for archiving along with the encoded data
+-s	Create a papiro of the script itself, useful for archiving along with the encoded data
 -h	Show the help
 -d	Debug mode, create a debug/ dir with the temp images
 ```
-
-## Self mode
-You can create a papiro of papiro.sh itself using the -s flag:
-
-```
-./papiro -s
-```
-This command encode the script in QR codes with a brief description about how to decode and use it; it is useful to include with the encoded data, to ensure a easy way to decode it even if your don't have the original Papiro script and are using an air gapped system.
 
 ## Example
 
@@ -125,10 +122,18 @@ Or you can enjoy the full [Divina Commedia in 7 pages](examples/divina-commedia/
 
 ## Privacy & Encryption
 
-Remember that a QR Code slightly obfuscates your data but it does not protect them in any way; if your data need privacy you *have* to encrypt them before using Papiro. This is also useful to avoid the [printer's attack surface](https://krebsonsecurity.com/2021/07/microsoft-issues-emergency-patch-for-windows-flaw/). To apply a good privacy layer you can use [GPG](https://gnupg.org/), a password protected zip (also useful to reduce the file size and so the number of QR Codes) or the built-in "new vim encrypted file":
+Remember that a QR Code obfuscates your data but it does not protect them in any way; if your data need privacy you *have* to encrypt them before using Papiro. This is also useful to avoid the [printer's attack surface](https://krebsonsecurity.com/2021/07/microsoft-issues-emergency-patch-for-windows-flaw/). To apply a good privacy layer you can use [GPG](https://gnupg.org/), a password protected zip (also useful to reduce the file size and so the number of QR Codes) or the built-in "new vim encrypted file":
 
 ```
 ./papiro.sh -x
 ```
 
-You can also use the `-a` option to don't annotate the filename on the created pdf.
+You can also use the `-a` (*Anonymous*) option to don't annotate the filename on the created pdf.
+
+## Self mode
+You can create a papiro of papiro.sh itself using the -s flag:
+
+```
+./papiro -s
+```
+This command encode the script in QR codes with a brief description about how to decode and use it; it is useful to include with the encoded data, to ensure a easy way to decode it even if your don't have the original Papiro script and are using an air gapped system.
