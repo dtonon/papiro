@@ -116,7 +116,7 @@ In the examples/ dir you can find a [nice 60KB cat's photo](examples/cat/cat.jpg
 ```
 This is a preview of the generated pdf (top cropped A4 page):
 
-[![Output pdf example](docs/output-example.png)](examples/qrcodes-cat.jpg.pdf)
+[![Output pdf example](docs/output-example.png)](examples/cat/qrcodes-cat.jpg.pdf)
 
 Or you can enjoy the full [Divina Commedia in 7 pages](examples/divina-commedia/README.md) or [Moby-Dick in 15 pages](examples/moby-dick/README.md), too!
 
